@@ -1,0 +1,151 @@
+# DAST — authenticated deep scan (OWASP ZAP Automation Framework).
+#
+# Runs a Postman-seeded, authenticated (JSON login), full active scan against a
+# staging/target environment. Findings are reported (SARIF + HTML), never silently
+# dropped; a real scan failure (bad plan, docker/pull error, ZAP crash) or a High-risk
+# finding fails the job and stops the pipeline. Medium-risk findings are reported as
+# warnings but do not block.
+#
+# Config lives in .zap/automation.yml (ZAP Automation Framework plan) and
+# .postman/collection.json (Postman collection to import — see .postman/README.md).
+#
+# IMPORTANT: activeScan performs real attack payloads (SQLi, XSS, etc.) against the
+# target. Only run this against systems you are authorized to test. Defaults to
+# rejecting any target whose URL contains "prod" unless allow-production is set.
+name: DAST Deep Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      target-url:
+        description: 'Base URL to scan (e.g. https://staging.handi.app). Falls back to the DAST_STAGING_URL repo/org variable if omitted.'
+        required: false
+        type: string
+      allow-production:
+        description: 'Must be true to target a URL containing "prod" — safety gate against accidental prod scans.'
+        required: false
+        type: boolean
+        default: false
+      confirm-authorized:
+        description: 'Type exactly "yes" to confirm you are authorized to run active DAST attacks against this target.'
+        required: true
+        type: string
+  schedule:
+    # 02:00 UTC Mon-Fri. Adjust to your change window. Targets DAST_STAGING_URL (repo/org
+    # Actions variable) — scheduled runs skip the manual confirmation gate.
+    - cron: '0 2 * * 1-5'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dast-deep-scan:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: {persist-credentials: false}
+
+      - name: Resolve and validate target
+        id: target
+        env:
+          INPUT_TARGET_URL: ${{ inputs.target-url }}
+          INPUT_ALLOW_PROD: ${{ inputs.allow-production }}
+          INPUT_CONFIRM: ${{ inputs.confirm-authorized }}
+          VAR_STAGING_URL: ${{ vars.DAST_STAGING_URL }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "$INPUT_CONFIRM" != "yes" ]; then
+              echo "::error::confirm-authorized must be exactly 'yes' to run an active DAST scan."
+              exit 1
+            fi
+          fi
+
+          TARGET_URL="$INPUT_TARGET_URL"
+          [ -z "$TARGET_URL" ] && TARGET_URL="$VAR_STAGING_URL"
+
+          if [ -z "$TARGET_URL" ]; then
+            echo "::error::No target URL — pass target-url or set the DAST_STAGING_URL repo/org variable."
+            exit 1
+          fi
+
+          case "$TARGET_URL" in
+            *prod*)
+              if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$INPUT_ALLOW_PROD" != "true" ]; then
+                echo "::error::Target '$TARGET_URL' looks like production. Set allow-production: true to confirm this is intentional."
+                exit 1
+              fi
+              ;;
+          esac
+
+          echo "target=$TARGET_URL" >> "$GITHUB_OUTPUT"
+          echo "Scanning: $TARGET_URL"
+
+      # If the target is only reachable over your private network, uncomment and wire up
+      # Tailscale the same way other jobs in this org do (see README.md secrets table):
+      # - name: Connect to Tailscale
+      #   uses: tailscale/github-action@<pinned-sha>
+      #   with:
+      #     oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+      #     oauth-secret: ${{ secrets.TAILSCALE_OAUTH_SECRET }}
+      #     tags: tag:ci
+
+      - name: Run ZAP Automation Framework (deep authenticated scan)
+        id: zap
+        env:
+          TARGET_URL: ${{ steps.target.outputs.target }}
+          DAST_ADMIN_USERNAME: ${{ secrets.DAST_ADMIN_USERNAME }}
+          DAST_ADMIN_PASSWORD: ${{ secrets.DAST_ADMIN_PASSWORD }}
+        run: |
+          if [ -z "$DAST_ADMIN_USERNAME" ] || [ -z "$DAST_ADMIN_PASSWORD" ]; then
+            echo "::error::DAST_ADMIN_USERNAME / DAST_ADMIN_PASSWORD secrets are not set."
+            exit 1
+          fi
+
+          set +e
+          docker run --rm \
+            -v "$PWD":/zap/wrk/:rw \
+            -e TARGET_URL \
+            -e DAST_ADMIN_USERNAME \
+            -e DAST_ADMIN_PASSWORD \
+            -t ghcr.io/zaproxy/zaproxy:stable \
+            bash -c "zap.sh -cmd -addonupdate -addoninstall postman -addoninstall authhelper -autorun /zap/wrk/.zap/automation.yml"
+          ZAP_EXIT=$?
+          set -e
+
+          echo "exit-code=$ZAP_EXIT" >> "$GITHUB_OUTPUT"
+
+          case "$ZAP_EXIT" in
+            0)
+              echo "ZAP DAST scan completed — no High-risk findings, no plan errors."
+              ;;
+            2)
+              echo "::warning::ZAP DAST scan completed with Medium-risk findings (non-blocking) — see the report artifacts."
+              ;;
+            *)
+              echo "::error::ZAP DAST scan failed or found High-risk findings (exit code $ZAP_EXIT) — see logs and report artifacts."
+              exit 1
+              ;;
+          esac
+
+      - name: Upload SARIF to code scanning
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63  # v4.38.0
+        with:
+          sarif_file: zap-dast.json
+          category: dast-zap
+
+      - name: Upload DAST reports
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: dast-reports-${{ github.run_id }}
+          path: |
+            zap-dast.json
+            zap-dast-report.html
+          if-no-files-found: warn
+          retention-days: 30
