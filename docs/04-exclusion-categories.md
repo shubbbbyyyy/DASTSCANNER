@@ -139,12 +139,15 @@ These paths are **always excluded** regardless of toggle state. They are hardcod
 ## Exclusion Flow
 
 ```mermaid
+---
+id: 976c8317-f4f9-480c-90d3-a0f3beea1bd7
+---
 flowchart LR
-    subgraph Toggle ON (default)
+    subgraph Toggle ON ["Toggle ON (default)"]
         EXCLUDE[Exclude Paths from Active Scan]
     end
 
-    subgraph Toggle OFF
+    subgraph Toggle OFF ["Toggle OFF"]
         INCLUDE[Include Paths in Active Scan]
     end
 
