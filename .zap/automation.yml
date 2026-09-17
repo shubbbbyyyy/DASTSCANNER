@@ -1,0 +1,278 @@
+# ZAP Automation Framework plan — authenticated, Postman-seeded, full active DAST scan
+# across all three Handi roles: Admin, User, Provider (artisan).
+#
+# Invoked by ../dastscanner.yml:
+#   zap.sh -cmd -addonupdate -addoninstall postman -addoninstall authhelper \
+#     -addoninstall graaljs -autorun /zap/wrk/.zap/automation.yml
+#
+# ${VAR} below is substituted from the process environment at run time. The workflow
+# exports TARGET_URL and the DAST_* secrets/vars below before this plan runs.
+#
+# Admin: JSON auth against POST /auth/admin/signin (email/password -> data.idToken).
+# User/Provider: two-step phone+OTP login (POST /auth/signin -> POST
+#   /auth/verify-phone-number -> data.idToken) via the custom script in
+#   .zap/scripts/otp-signin-auth.js, since ZAP's built-in "json" method only sends one
+#   request. See that file's header for what's verified vs. untested.
+#
+# User/Provider excludePaths below carry only the ALWAYS-excluded (session-breaking)
+# paths as committed; dastscanner.yml merges in the toggleable risk categories from
+# .zap/exclude-categories.yml before this file is handed to ZAP. Running this file
+# as-is (e.g. testing locally) scans those categories too — see that file's header.
+
+env:
+  contexts:
+    # ---------------------------------------------------------------------------
+    - name: "Admin"
+      urls:
+        - "${TARGET_URL}"
+      includePaths:
+        - "${TARGET_URL}.*"
+      excludePaths:
+        # Never let the scanner log itself out or fire money-moving / account-banning
+        # admin actions. Active scan WILL try every parameter on every in-scope URL —
+        # these are the routes in .postman/collection-admin.json with real-world
+        # consequences even on a dev environment (moves money, bans a real account).
+        # Everything else (KYC review, dispute resolve, job cancel/complete, feature
+        # toggle) is left IN SCOPE on purpose — testing authz/injection on admin
+        # actions is the point of this scan — but re-review and add more if needed.
+        - "${TARGET_URL}/admin/withdrawal-requests/.*/approve.*"
+        - "${TARGET_URL}/admin/withdrawal-requests/.*/reject.*"
+        - "${TARGET_URL}/admin/withdrawal-requests/.*/fail.*"
+        - "${TARGET_URL}/admin/users/.*/disable.*"
+        - "${TARGET_URL}/admin/users/.*/enable.*"
+        - "${TARGET_URL}/auth/logout.*"
+
+      # {%username%} and {%password%} are ZAP's own placeholder tokens — leave
+      # them as-is, ZAP substitutes the active user's credentials into them.
+      authentication:
+        method: "json"
+        parameters:
+          loginPageUrl: "${TARGET_URL}/auth/admin/signin"
+          loginRequestUrl: "${TARGET_URL}/auth/admin/signin"
+          loginRequestBody: '{"email":"{%username%}","password":"{%password%}"}'
+        verification:
+          # 201 + a data.idToken field means success (see collection-admin.json ->
+          # Authentication > Sign In). loggedOutRegex is a best guess — the
+          # collection has no captured failed-login example; verify manually.
+          method: "response"
+          loggedInRegex: '\Q"idToken"\E'
+          loggedOutRegex: '\Q"status":"error"\E|\Q"statusCode":401\E'
+
+      sessionManagement:
+        # authhelper add-on's header-based session management: injects the JWT
+        # pulled from the login response as a Bearer Authorization header on
+        # every subsequent request (this API is bearer-token, not cookie, auth).
+        method: "headers"
+        parameters:
+          Authorization: "Bearer {%json:data.idToken%}"
+
+      users:
+        - name: "admin"
+          credentials:
+            username: "${DAST_ADMIN_USERNAME}"
+            password: "${DAST_ADMIN_PASSWORD}"
+
+    # ---------------------------------------------------------------------------
+    - name: "User"
+      urls:
+        - "${TARGET_URL}"
+      includePaths:
+        - "${TARGET_URL}.*"
+      excludePaths:
+        # Committed baseline = session-breaking paths only. dastscanner.yml appends
+        # the toggled risk categories from .zap/exclude-categories.yml at run time.
+        - "${TARGET_URL}/auth/logout.*"
+        - "${TARGET_URL}/auth/change-phone-number.*"
+
+      authentication:
+        method: "script"
+        parameters:
+          script: ".zap/scripts/otp-signin-auth.js"
+          scriptEngine: "ECMAScript : Graal.js"
+          "Base URL": "${TARGET_URL}"
+          "Role": "USER"
+          "OTP Code": "${DAST_TEST_OTP}"
+        verification:
+          method: "response"
+          loggedInRegex: '\Q"idToken"\E'
+          loggedOutRegex: '\Q"status":"error"\E|\Q"statusCode":401\E'
+
+      sessionManagement:
+        method: "headers"
+        parameters:
+          Authorization: "Bearer {%json:data.idToken%}"
+
+      users:
+        - name: "user"
+          credentials:
+            "Phone Number": "${DAST_USER_PHONE}"
+
+    # ---------------------------------------------------------------------------
+    - name: "Provider"
+      urls:
+        - "${TARGET_URL}"
+      includePaths:
+        - "${TARGET_URL}.*"
+      excludePaths:
+        - "${TARGET_URL}/auth/logout.*"
+        - "${TARGET_URL}/auth/change-phone-number.*"
+
+      authentication:
+        method: "script"
+        parameters:
+          script: ".zap/scripts/otp-signin-auth.js"
+          scriptEngine: "ECMAScript : Graal.js"
+          "Base URL": "${TARGET_URL}"
+          "Role": "ARTISAN"
+          "OTP Code": "${DAST_TEST_OTP}"
+        verification:
+          method: "response"
+          loggedInRegex: '\Q"idToken"\E'
+          loggedOutRegex: '\Q"status":"error"\E|\Q"statusCode":401\E'
+
+      sessionManagement:
+        method: "headers"
+        parameters:
+          Authorization: "Bearer {%json:data.idToken%}"
+
+      users:
+        - name: "provider"
+          credentials:
+            "Phone Number": "${DAST_PROVIDER_PHONE}"
+
+  parameters:
+    failOnError: true
+    failOnWarning: false
+    progressToStdout: true
+
+jobs:
+  # 1. Seed ZAP's sitemap from both Postman collections (documented API surface,
+  #    including routes a crawler would never find on its own). {{handi-base-url}}
+  #    has no stored default in either collection — must be resolved here.
+  - type: postman
+    parameters:
+      collectionFile: ".postman/collection-admin.json"
+      variables: "handi-base-url=${TARGET_URL}"
+
+  - type: postman
+    parameters:
+      collectionFile: ".postman/collection-user.json"
+      variables: "handi-base-url=${TARGET_URL}"
+
+  - type: passiveScan-config
+    parameters:
+      maxAlertsPerRule: 0
+
+  # 2. Admin: crawl, then full authenticated active scan.
+  - type: spider
+    parameters:
+      context: "Admin"
+      user: "admin"
+      maxDuration: 5
+
+  - type: spiderAjax
+    parameters:
+      context: "Admin"
+      user: "admin"
+      maxDuration: 5
+      logoutAvoidance: true
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 5
+
+  - type: activeScan
+    parameters:
+      context: "Admin"
+      user: "admin"
+      policy: "Default Policy"
+      defaultStrength: "Medium"
+      defaultThreshold: "Medium"
+      maxScanDurationInMins: 35
+      maxRuleDurationInMins: 10
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 5
+
+  # 3. User: crawl, then full authenticated active scan.
+  - type: spider
+    parameters:
+      context: "User"
+      user: "user"
+      maxDuration: 5
+
+  - type: spiderAjax
+    parameters:
+      context: "User"
+      user: "user"
+      maxDuration: 5
+      logoutAvoidance: true
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 5
+
+  - type: activeScan
+    parameters:
+      context: "User"
+      user: "user"
+      policy: "Default Policy"
+      defaultStrength: "Medium"
+      defaultThreshold: "Medium"
+      maxScanDurationInMins: 35
+      maxRuleDurationInMins: 10
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 5
+
+  # 4. Provider (artisan): crawl, then full authenticated active scan.
+  - type: spider
+    parameters:
+      context: "Provider"
+      user: "provider"
+      maxDuration: 5
+
+  - type: spiderAjax
+    parameters:
+      context: "Provider"
+      user: "provider"
+      maxDuration: 5
+      logoutAvoidance: true
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 5
+
+  - type: activeScan
+    parameters:
+      context: "Provider"
+      user: "provider"
+      policy: "Default Policy"
+      defaultStrength: "Medium"
+      defaultThreshold: "Medium"
+      maxScanDurationInMins: 35
+      maxRuleDurationInMins: 10
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 5
+
+  # 5. Reports cover all three contexts' findings — filenames must match the
+  #    upload steps in dastscanner.yml.
+  - type: report
+    parameters:
+      template: "sarif-json"
+      reportDir: "/zap/wrk"
+      reportFile: "zap-dast"
+      reportTitle: "DAST Deep Scan"
+      reportDescription: "Authenticated ZAP scan (Admin/User/Provider) seeded from Postman collections."
+
+  - type: report
+    parameters:
+      template: "modern"
+      reportDir: "/zap/wrk"
+      reportFile: "zap-dast-report"
+      reportTitle: "DAST Deep Scan"
+      reportDescription: "Authenticated ZAP scan (Admin/User/Provider) seeded from Postman collections."

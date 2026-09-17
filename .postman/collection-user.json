@@ -1,0 +1,2602 @@
+{
+	"info": {
+		"_postman_id": "a61a3f45-5cfc-4a77-8960-8bad6ef07ef9",
+		"name": "Handi",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "52564246",
+		"_collection_link": "https://go.postman.co/collection/52564246-a61a3f45-5cfc-4a77-8960-8bad6ef07ef9?source=collection_link"
+	},
+	"item": [
+		{
+			"name": "Onboarding",
+			"item": [
+				{
+					"name": "Sign In",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"role\": \"ARTISAN\",\n    \"phoneNumber\": \"+2349084549002\"\n}\n\n// {\n//     \"role\": \"USER\",\n//     \"phoneNumber\": \"+2349084549004\"\n// }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/auth/signin",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"auth",
+								"signin"
+							]
+						}
+					}
+				},
+				{
+					"name": "Complete Onboarding",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    pm.environment.set(\"handi-id-token\", pm.response.json().data.idToken);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // \"referralCode\": \"FHXYS7\",\n    \"firstName\": \"User033\",\n    \"lastName\": \"Doe\",\n    \"deviceId\": \"xxxx\",\n    \"platform\": \"ios\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/auth/signup/complete",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"auth",
+								"signup",
+								"complete"
+							]
+						}
+					}
+				},
+				{
+					"name": "Resend OTP",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sessionId\": \"5f43dc2b-6bdf-4802-a01c-2c4fc846c440\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/auth/resend-otp",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"auth",
+								"resend-otp"
+							]
+						}
+					}
+				},
+				{
+					"name": "Change Phone Number",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sessionId\": \"5f43dc2b-6bdf-4802-a01c-2c4fc846c440\",\n    \"phoneNumber\": \"+2349084549001\",\n    \"newPhoneNumber\": \"+2349084549002\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/auth/change-phone-number",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"auth",
+								"change-phone-number"
+							]
+						}
+					}
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    pm.environment.set(\"handi-id-token\", pm.response.json().data.idToken);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"3016a6c8fffffd4887842b8ae526a6a5b7a4deecb7bbc88ade3f0cac50662e28\",\n    \"deviceId\": \"xxxx\",\n    \"platform\": \"ios\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/auth/refresh-token",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"auth",
+								"refresh-token"
+							]
+						}
+					}
+				},
+				{
+					"name": "Verify Phone Number",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    pm.environment.set(\"handi-id-token\", pm.response.json().data.idToken);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sessionId\": \"fa9a74c2-0465-42b0-9088-89a8b7226d56\",\n    \"phoneNumber\": \"+2349084549002\",\n    \"code\": \"5612\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/auth/verify-phone-number",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"auth",
+								"verify-phone-number"
+							]
+						}
+					}
+				},
+				{
+					"name": "Verify Email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    pm.environment.set(\"handi-id-token\", pm.response.json().data.idToken);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"sessionId\": \"234d568b-3fc2-406c-997e-08042a1994a8\",\n    \"email\": \"saheedlawanson47+002@gmail.com\",\n    \"code\": \"1234\",\n    \"deviceId\": \"xxxx\",\n    \"platform\": \"ios\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/auth/verify-email",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"auth",
+								"verify-email"
+							]
+						}
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"deviceId\": \"xxxx\",\n    \"platform\": \"ios\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/auth/logout",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Authenticated User",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/auth/me",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Notification",
+			"item": [
+				{
+					"name": "Get Notification Settings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{handi-base-url}}/notification/settings",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"notification",
+								"settings"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Notifications",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{handi-base-url}}/notifications",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"notifications"
+							]
+						}
+					}
+				},
+				{
+					"name": "Mark Notification as Read",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{handi-base-url}}/notifications/:notificationId/read",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"notifications",
+								":notificationId",
+								"read"
+							],
+							"variable": [
+								{
+									"key": "notificationId",
+									"value": "feda2ebd-2e71-4f17-8157-7bba87ef993c"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Notification Settings",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"settings\": [\n        {\n            \"type\": \"OFFERS\",\n            \"channel\": \"PUSH\",\n            \"enabled\": false\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/notification/settings",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"notification",
+								"settings"
+							]
+						}
+					}
+				},
+				{
+					"name": "Register Push Device",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"deviceId\": \"1234\",\n    \"platform\": \"ios\",\n    \"pushToken\": \"ExponentPushToken[1234]\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/push-devices/register",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"push-devices",
+								"register"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Wallet",
+			"item": [
+				{
+					"name": "Get Wallet",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/wallet?bucket=referral",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"wallet"
+							],
+							"query": [
+								{
+									"key": "bucket",
+									"value": "referral"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Generate Payment Reference",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/wallet/payment-reference",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"wallet",
+								"payment-reference"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Payment Methods",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/wallet/payment-methods",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"wallet",
+								"payment-methods"
+							]
+						}
+					}
+				},
+				{
+					"name": "List Banks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/wallet/banks",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"wallet",
+								"banks"
+							]
+						}
+					}
+				},
+				{
+					"name": "Resolve Account Number",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"accountNumber\": \"0000000000\",\n    \"bankCode\": \"001\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/wallet/resolve-account-number",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"wallet",
+								"resolve-account-number"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Withdrawal Bank",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"bankCode\": \"058\",\n    \"accountNumber\": \"0241931461\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/withdrawal-bank",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"withdrawal-bank"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Active Withdrawal Bank",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/withdrawal-bank/active",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"withdrawal-bank",
+								"active"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Withdrawal Request",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"amount\": \"1000\",\n    \"withdrawalBankId\": \"675b9be1-71d4-43ca-88d0-94826cbf9299\",\n    \"pin\": \"1234\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/withdrawal-requests",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"withdrawal-requests"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Referral Withdrawal Request",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"withdrawalBankId\": \"675b9be1-71d4-43ca-88d0-94826cbf9299\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/withdrawal-requests/referral",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"withdrawal-requests",
+								"referral"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Payment Session",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"amount\": \"15000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/payment/session",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"payment",
+								"session"
+							]
+						}
+					}
+				},
+				{
+					"name": "Complete Payment Session",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"provider\": \"monnify\",\n    \"checkoutResult\": {\n        \"paymentReference\": \"HNDI-PMT-20260611-X5R6S9UN\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/payment/session/complete",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"payment",
+								"session",
+								"complete"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Withdrawal Requests",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/withdrawal-requests/me",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"withdrawal-requests",
+								"me"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Earnings History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/wallet/earnings-history",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"wallet",
+								"earnings-history"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Earnings History V2",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/wallet/earnings/history",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"wallet",
+								"earnings",
+								"history"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Earnings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/wallet/earnings",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"wallet",
+								"earnings"
+							]
+						}
+					}
+				},
+				{
+					"name": "Cancel Withdrawal Request",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/withdrawal-requests/:requestId",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"withdrawal-requests",
+								":requestId"
+							],
+							"variable": [
+								{
+									"key": "requestId",
+									"value": "24e4d123-0425-4a3b-a2c0-eb7e0b10d30a"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Chat",
+			"item": [
+				{
+					"name": "List Chats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/chat",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"chat"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Chat By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/chat/:id",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"chat",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "9a7514af-c285-43da-8b7a-891831fb104c"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "List Chat Messages",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/chat/:chatId/messages",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"chat",
+								":chatId",
+								"messages"
+							],
+							"variable": [
+								{
+									"key": "chatId",
+									"value": "9a7514af-c285-43da-8b7a-891831fb104c"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Send Chat Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Idempotency-Key",
+								"value": "random-key-13ss45xxxxxdsxs",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // \"replyToMessageId\": \"e85d3c10-d650-4847-83a6-9d99d63fce8a\", // Optional\n    // \"uploadIds\": [\n    //     \"62607784-aa4e-44e0-8d4a-ae28b9cdeb12\"\n    // ],\n    \"chatId\": \"953ce47f-6542-4320-878c-70b44ac1f03a\",\n    \"text\": \"Hi There\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/chat/messages",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"chat",
+								"messages"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Chat Content Upload URL",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Idempotency-Key",
+								"value": "random-keys-1s3x453ddxxxx",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"chatId\": \"9a7514af-c285-43da-8b7a-891831fb104c\",\n    \"contentType\": \"image\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/chat/messages/upload-url",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"chat",
+								"messages",
+								"upload-url"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Chat Content Download URL",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Idempotency-Key",
+								"value": "random-keys-1s3453ddxxxx",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"uploadId\": \"62607784-aa4e-44e0-8d4a-ae28b9cdeb12\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/chat/messages/download-url",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"chat",
+								"messages",
+								"download-url"
+							]
+						}
+					}
+				},
+				{
+					"name": "Read Chat Message",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/chat/messages/:messageId/read",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"chat",
+								"messages",
+								":messageId",
+								"read"
+							],
+							"variable": [
+								{
+									"key": "messageId",
+									"value": "1f0f1e3c-ee5a-4d81-abf2-6db931cbdf9d"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Register Address",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"placeId\",\n    \"value\": \"ChIJZUguZGyMOxARDvylgh-SHyo\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/users/address/register",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"users",
+								"address",
+								"register"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Active Address",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/users/address",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"users",
+								"address"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update User Profile",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"saheedlawanson47+033@gmail.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/users/profile",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"users",
+								"profile"
+							]
+						}
+					}
+				},
+				{
+					"name": "Autocomplete Address",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/users/address/autocomplete?query=National stadium",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"users",
+								"address",
+								"autocomplete"
+							],
+							"query": [
+								{
+									"key": "query",
+									"value": "National stadium"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Reverse Geocode Coordinates",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/users/address/geocode?lat=6.496763&long=3.365138",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"users",
+								"address",
+								"geocode"
+							],
+							"query": [
+								{
+									"key": "lat",
+									"value": "6.496763"
+								},
+								{
+									"key": "long",
+									"value": "3.365138"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Profile Image Upload URL",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Idempotency-Key",
+								"value": "13234333",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"contentType\": \"image\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/users/profile/image/init",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"users",
+								"profile",
+								"image",
+								"init"
+							]
+						}
+					}
+				},
+				{
+					"name": "Confirm Profile Image Upload",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Idempotency-Key",
+								"value": "13234333",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"uploadId\": \"0aefb563-b6e2-4489-ae28-2db5fc292f63\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/users/profile/image",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"users",
+								"profile",
+								"image"
+							]
+						}
+					}
+				},
+				{
+					"name": "Set PIN",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Idempotency-Key",
+								"value": "13234333",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"pin\": \"1234\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/users/transaction-pin",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"users",
+								"transaction-pin"
+							]
+						}
+					}
+				},
+				{
+					"name": "Upload Profile Image",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"uuid": "6ab137a4-7c85-4333-9261-e777f9078c9a",
+									"src": "postman-cloud:///1f02c273-9cb8-4030-8506-152464f7a05c"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/users/profile/image",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"users",
+								"profile",
+								"image"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Referral",
+			"item": [
+				{
+					"name": "Get Referral Code",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/referrals/code",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"referrals",
+								"code"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Referred Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/referrals/referred-users",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"referrals",
+								"referred-users"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "S3",
+			"item": [
+				{
+					"name": "Upload to S3 Sample",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "key",
+									"value": "dev/profile-images/cbc2bbd4-f325-42e2-8173-c58ffe49bb83/1773911071182",
+									"type": "text"
+								},
+								{
+									"key": "Policy",
+									"value": "eyJleHBpcmF0aW9uIjoiMjAyNi0wMy0xOVQwOTowOTozMVoiLCJjb25kaXRpb25zIjpbWyJjb250ZW50LWxlbmd0aC1yYW5nZSIsMCw1MjQyODgwXSxbInN0YXJ0cy13aXRoIiwiJENvbnRlbnQtVHlwZSIsImltYWdlIl0seyJidWNrZXQiOiJoYW5kaS1wdWJsaWMtYXNzZXRzIn0seyJYLUFtei1BbGdvcml0aG0iOiJBV1M0LUhNQUMtU0hBMjU2In0seyJYLUFtei1DcmVkZW50aWFsIjoiQUtJQVNCRlpWN1NOTkRERVFUSFgvMjAyNjAzMTkvdXMtZWFzdC0xL3MzL2F3czRfcmVxdWVzdCJ9LHsiWC1BbXotRGF0ZSI6IjIwMjYwMzE5VDA5MDQzMVoifSx7ImtleSI6ImRldi9wcm9maWxlLWltYWdlcy9jYmMyYmJkNC1mMzI1LTQyZTItODE3My1jNThmZmU0OWJiODMvMTc3MzkxMTA3MTE4MiJ9XX0=",
+									"type": "text"
+								},
+								{
+									"key": "bucket",
+									"value": "handi-public-assets",
+									"type": "text"
+								},
+								{
+									"key": "X-Amz-Date",
+									"value": "20260319T090431Z",
+									"type": "text"
+								},
+								{
+									"key": "X-Amz-Algorithm",
+									"value": "AWS4-HMAC-SHA256",
+									"type": "text"
+								},
+								{
+									"key": "X-Amz-Signature",
+									"value": "2c609d58aa965b6f20d6eccac447c35983523d9e3d19cd7e8dd91f3e7510afcd",
+									"type": "text"
+								},
+								{
+									"key": "X-Amz-Credential",
+									"value": "AKIASBFZV7SNNDDEQTHX/20260319/us-east-1/s3/aws4_request",
+									"type": "text"
+								},
+								{
+									"key": "Content-Type",
+									"value": "image/jpeg",
+									"type": "text",
+									"uuid": "107d6f1e-c4da-4c87-884a-f12924ba2d7a"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"uuid": "cf70edd0-2357-42a1-8c3c-c79dac2a4a0c",
+									"src": "postman-cloud:///1f123722-4bee-4450-870f-15f38b1a8e8a"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://handi-public-assets.s3.us-east-1.amazonaws.com/",
+							"protocol": "https",
+							"host": [
+								"handi-public-assets",
+								"s3",
+								"us-east-1",
+								"amazonaws",
+								"com"
+							],
+							"path": [
+								""
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Job",
+			"item": [
+				{
+					"name": "Create Job",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Cook\",\n    \"description\": \"doingss\",\n    \"scheduledDate\": \"2026-05-05T00:00:00\",\n    \"type\": \"WALK_IN\",\n    \"location\": {\n        \"type\": \"placeId\",\n        \"value\": \"ChIJL-8xuW6MOxAR2iDQ9e8LcvQ\"\n    },\n    \"categoryId\": \"d7f38ff8-cf14-4d4a-9970-6de8bf2dda22\",\n    // \"uploadIds\": [\"d8d75844-1077-48e1-89c6-8ca8715d4c56\"],\n    \"budgetAmount\": \"2000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/jobs",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"jobs"
+							]
+						}
+					}
+				},
+				{
+					"name": "Redispatch Job",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/jobs/:jobId/redispatch",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"jobs",
+								":jobId",
+								"redispatch"
+							],
+							"variable": [
+								{
+									"key": "jobId",
+									"value": "8b248974-0366-48d4-b47a-f7d654212bfc"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get User Jobs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/jobs/user",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"jobs",
+								"user"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get User Job By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/jobs/:jobId",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"jobs",
+								":jobId"
+							],
+							"variable": [
+								{
+									"key": "jobId",
+									"value": "1918fded-0fea-4e3b-9082-02a161839fed"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Artisan Jobs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/jobs/artisan",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"jobs",
+								"artisan"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Pricing Rules",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/jobs/pricing-rules/:categoryId",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"jobs",
+								"pricing-rules",
+								":categoryId"
+							],
+							"variable": [
+								{
+									"key": "categoryId",
+									"value": "4684e385-f49d-4b71-b2dd-a06113d4992b"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Job Image Upload URL",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"contentType\": \"image\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/jobs/image/upload",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"jobs",
+								"image",
+								"upload"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Job Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/jobs/categories",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"jobs",
+								"categories"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Job Dispatches",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/job-dispatches/artisan/pending",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"job-dispatches",
+								"artisan",
+								"pending"
+							]
+						}
+					}
+				},
+				{
+					"name": "Send Job Quote",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"jobId\": \"d1e9aa06-a6ee-478f-b8bc-fbe653c1d253\",\n    \"amount\": \"5000\",\n    \"message\": \"string\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/job-quotes",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"job-quotes"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Pending Job Quotes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/job-quotes/:jobId",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"job-quotes",
+								":jobId"
+							],
+							"variable": [
+								{
+									"key": "jobId",
+									"value": "821c8c22-d3b1-4452-bdbc-dafcd092b708"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Reject Quote",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/job-quotes/:quoteId/reject",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"job-quotes",
+								":quoteId",
+								"reject"
+							],
+							"variable": [
+								{
+									"key": "quoteId",
+									"value": "b89c63d0-d176-4732-a747-809731908315"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Accept Quote",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"paymentMethod\": \"ONLINE\",\n    \"paymentReference\": \"HNDI-PMT-20260407-0XT023\",\n    \"paymentProvider\": \"paystack\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/job-quotes/:quoteId/accept",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"job-quotes",
+								":quoteId",
+								"accept"
+							],
+							"variable": [
+								{
+									"key": "quoteId",
+									"value": "0be98671-a098-4f59-ab35-ed726d484ba9"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Mark Job as Completed",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rating\": 5,\n    \"review\": \"Awesome job\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/jobs/complete/:jobId",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"jobs",
+								"complete",
+								":jobId"
+							],
+							"variable": [
+								{
+									"key": "jobId",
+									"value": "cec408cb-1a93-4a8d-b2db-49d64507af5f"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Cancel Artisan Job",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/jobs/artisan/cancel/:jobId",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"jobs",
+								"artisan",
+								"cancel",
+								":jobId"
+							],
+							"variable": [
+								{
+									"key": "jobId",
+									"value": "78f9767b-f639-4aba-b8d5-d114a3644a9c"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Cancel User Job",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/jobs/user/cancel/:jobId",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"jobs",
+								"user",
+								"cancel",
+								":jobId"
+							],
+							"variable": [
+								{
+									"key": "jobId",
+									"value": "8b248974-0366-48d4-b47a-f7d654212bfc"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "KYC",
+			"item": [
+				{
+					"name": "Get KYC Application",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/kyc/applications/me",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"kyc",
+								"applications",
+								"me"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get KYC Upload URL",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fieldId\": \"SELFIE\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/kyc/applications/upload",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"kyc",
+								"applications",
+								"upload"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update KYC Application",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"updates\": [\n        {\n            \"fieldId\": \"GOVERNMENT_ID\",\n            \"fieldValue\": {\n                \"idImageUploadIds\": [\n                    \"9e222168-b3bb-4afd-8778-52ef3b865704\",\n                    \"8f018681-b257-40fd-a823-0c5135fa9ef4\"\n                ],\n                \"idNumber\": \"5474868755353\",\n                \"idType\": \"NIN\"\n            }\n        }\n        // {\n        //     \"fieldId\": \"BANK_DETAILS\",\n        //     \"fieldValue\": {\n        //         \"accountNumber\": \"0001234567\",\n        //         \"bankCode\": \"001\"\n        //     }\n        // }\n        // {\n        //     \"fieldId\": \"BUSINESS_PROFILE\",\n        //     \"fieldValue\": {\n        //         \"businessName\": \"The Stark Foundation\",\n        //         \"categoryIds\": [\n        //             \"577af67f-f016-49c1-86aa-46bd230b35e8\"\n        //         ],\n        //         \"businessCoverImageUploadId\": \"cc60bbd9-a9aa-4a18-8e43-4482f83312f7\"\n        //     }\n        // }\n        // {\n        //     \"fieldId\": \"SERVICE_AVAILABILITY\",\n        //     \"fieldValue\": {\n        //         \"radius\": 10,\n        //         \"location\": {\n        //             \"type\": \"placeId\",\n        //             \"value\": \"ChIJZUguZGyMOxARDvylgh-SHyo\"\n        //         },\n        //         \"schedule\": {\n        //             \"MONDAY\": {\n        //                 \"opensAt\": \"11:00\",\n        //                 \"closesAt\": \"15:00\"\n        //             },\n        //             \"TUESDAY\": {\n        //                 \"opensAt\": \"11:00\",\n        //                 \"closesAt\": \"15:00\"\n        //             },\n        //             \"WEDNESDAY\": {\n        //                 \"opensAt\": \"11:00\",\n        //                 \"closesAt\": \"15:00\"\n        //             },\n        //             \"THURSDAY\": {\n        //                 \"opensAt\": \"11:00\",\n        //                 \"closesAt\": \"15:00\"\n        //             },\n        //             \"FRIDAY\": {\n        //                 \"opensAt\": \"11:00\",\n        //                 \"closesAt\": \"15:00\"\n        //             }\n        //         }\n        //     }\n        // }\n        // {\n        //     \"fieldId\": \"SELFIE\",\n        //     \"fieldValue\": [\"4ee87ed6-3866-411b-aa12-f80c383cb8d7\"]\n        // }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/kyc/applications/current",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"kyc",
+								"applications",
+								"current"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Artisan",
+			"item": [
+				{
+					"name": "Services",
+					"item": [
+						{
+							"name": "Create Service",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Standard Home Cleaning\",\n  \"description\": \"Deep cleaning for a 2-bedroom apartment, including kitchen and bathrooms.\",\n  \"categoryId\": \"eb61bf08-2870-4a33-8b1d-f4a1d41718f5\",\n  \"pricingType\": \"fixed\",\n  \"minPrice\": \"25000.00\",\n//   \"maxPrice\": \"45000.00\", // Optional for range type pricing\n  \"addons\": [\n    { \"name\": \"Inside fridge cleaning\", \"price\": \"3000.00\" },\n    { \"name\": \"Balcony washing\", \"price\": \"2000.00\" }\n  ],\n  \"uploadIds\": [\n    \"388717a0-c109-4b03-8ca2-0905a5d5db95\"\n  ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{handi-base-url}}/artisan/services",
+									"host": [
+										"{{handi-base-url}}"
+									],
+									"path": [
+										"artisan",
+										"services"
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Service Image Upload URL",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{handi-base-url}}/artisan/services/image/upload",
+									"host": [
+										"{{handi-base-url}}"
+									],
+									"path": [
+										"artisan",
+										"services",
+										"image",
+										"upload"
+									]
+								}
+							}
+						},
+						{
+							"name": "List My Services",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{handi-base-url}}/artisan/services/me",
+									"host": [
+										"{{handi-base-url}}"
+									],
+									"path": [
+										"artisan",
+										"services",
+										"me"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1",
+											"disabled": true
+										},
+										{
+											"key": "limit",
+											"value": "10",
+											"disabled": true
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "List Artisan Services",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{handi-base-url}}/artisan/services/:artisanId",
+									"host": [
+										"{{handi-base-url}}"
+									],
+									"path": [
+										"artisan",
+										"services",
+										":artisanId"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1",
+											"disabled": true
+										},
+										{
+											"key": "limit",
+											"value": "10",
+											"disabled": true
+										}
+									],
+									"variable": [
+										{
+											"key": "artisanId",
+											"value": "c884e5b5-99e2-439d-bd98-4ec9039365a9"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Delete Service",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{handi-base-url}}/artisan/services/:serviceId",
+									"host": [
+										"{{handi-base-url}}"
+									],
+									"path": [
+										"artisan",
+										"services",
+										":serviceId"
+									],
+									"variable": [
+										{
+											"key": "serviceId",
+											"value": "aabd4248-f8cd-46ce-98cd-f67a4ac66c2e"
+										}
+									]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Reviews",
+					"item": [
+						{
+							"name": "Get My Ratings",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{handi-base-url}}/artisan/ratings/me",
+									"host": [
+										"{{handi-base-url}}"
+									],
+									"path": [
+										"artisan",
+										"ratings",
+										"me"
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Artisan Reviews",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{handi-base-url}}/artisan/reviews/:artisanId",
+									"host": [
+										"{{handi-base-url}}"
+									],
+									"path": [
+										"artisan",
+										"reviews",
+										":artisanId"
+									],
+									"variable": [
+										{
+											"key": "artisanId",
+											"value": "d5301561-a47c-48ca-8b5c-dccbc538f9f6"
+										}
+									]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Settings",
+					"item": [
+						{
+							"name": "Update Artisan Online Status",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{handi-base-url}}/artisan/online-status/:onlineStatus",
+									"host": [
+										"{{handi-base-url}}"
+									],
+									"path": [
+										"artisan",
+										"online-status",
+										":onlineStatus"
+									],
+									"variable": [
+										{
+											"key": "onlineStatus",
+											"value": "online"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Get My Service Categories",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{handi-base-url}}/artisan/service-categories/me",
+									"host": [
+										"{{handi-base-url}}"
+									],
+									"path": [
+										"artisan",
+										"service-categories",
+										"me"
+									]
+								}
+							}
+						},
+						{
+							"name": "Update My Service Categories",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"updates\": [\n        \"577af67f-f016-49c1-86aa-46bd230b35e8\"\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{handi-base-url}}/artisan/service-categories",
+									"host": [
+										"{{handi-base-url}}"
+									],
+									"path": [
+										"artisan",
+										"service-categories"
+									]
+								}
+							}
+						},
+						{
+							"name": "Update My Service Availability",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"radius\": 30,\n    \"location\": {\n        \"type\": \"placeId\",\n        \"value\": \"ChIJL-8xuW6MOxAR2iDQ9e8LcvQ\"\n    },\n    \"schedule\": {\n        \"SUNDAY\": {\n            \"opensAt\": \"00:00\",\n            \"closesAt\": \"20:00\"\n        }\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{handi-base-url}}/artisan/availability",
+									"host": [
+										"{{handi-base-url}}"
+									],
+									"path": [
+										"artisan",
+										"availability"
+									]
+								}
+							}
+						},
+						{
+							"name": "Get My Service Availability",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{handi-base-url}}/artisan/availability/me",
+									"host": [
+										"{{handi-base-url}}"
+									],
+									"path": [
+										"artisan",
+										"availability",
+										"me"
+									]
+								}
+							}
+						},
+						{
+							"name": "Get My Profile",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{handi-base-url}}/artisan/profile/me",
+									"host": [
+										"{{handi-base-url}}"
+									],
+									"path": [
+										"artisan",
+										"profile",
+										"me"
+									]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Featured Artisans",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/artisan/featured?coordinates.lat=6.496763&coordinates.long=3.365138",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"artisan",
+								"featured"
+							],
+							"query": [
+								{
+									"key": "coordinates.lat",
+									"value": "6.496763"
+								},
+								{
+									"key": "coordinates.long",
+									"value": "3.365138"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Popular Artisans",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/artisan/popular?lat=6.496763&long=3.365138",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"artisan",
+								"popular"
+							],
+							"query": [
+								{
+									"key": "lat",
+									"value": "6.496763"
+								},
+								{
+									"key": "long",
+									"value": "3.365138"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Artisan Profile Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/artisan/profile/:artisanId",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"artisan",
+								"profile",
+								":artisanId"
+							],
+							"variable": [
+								{
+									"key": "artisanId",
+									"value": "be522e9a-e9ee-465e-b5ed-2835db79c223"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Dev - Fast Track",
+			"item": [
+				{
+					"name": "Create Verified Artisan",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Idempotency-Key",
+								"value": "13234333",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phoneNumber\": \"+2349084549002\",\n    \"firstName\": \"Artisan\",\n    \"lastName\": \"Lawanson\",\n    \"businessName\": \"Amina Home Services\",\n    \"categoryIds\": [\n        \"577af67f-f016-49c1-86aa-46bd230b35e8\"\n    ],\n    \"bankDetails\": {\n        \"accountNumber\": \"0123456789\",\n        \"bankCode\": \"058\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/dev/fast-track/artisan",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"dev",
+								"fast-track",
+								"artisan"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Service Categories",
+			"item": [
+				{
+					"name": "Get Service Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/service-categories",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"service-categories"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "App",
+			"item": [
+				{
+					"name": "Get App Update Config",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/app/update/config?platform=android&appType=user",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"app",
+								"update",
+								"config"
+							],
+							"query": [
+								{
+									"key": "platform",
+									"value": "android"
+								},
+								{
+									"key": "appType",
+									"value": "user"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update App Update Config",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"platform\": \"android\",\n    \"appType\": \"artisan\",\n    \"latestVersion\": \"1.3.0\",\n    \"minimumVersion\": \"1.2.0\",\n    \"forceUpdate\": true,\n    \"updateUrl\": \"https://play.google.com/store/apps/details?id=com.handi.user.app\",\n    \"changelog\": \"Bug fixes and performance improvements\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/app/update/config",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"app",
+								"update",
+								"config"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Contact",
+			"item": [
+				{
+					"name": "Get Contact Subjects",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{handi-base-url}}/contact/subjects",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"contact",
+								"subjects"
+							]
+						}
+					}
+				},
+				{
+					"name": "Submit Contact Form",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"phoneNumber\": \"+2349084549002\",\n    \"email\": \"john@example.com\",\n    \"subjectId\": \"{{contact-subject-id}}\",\n    \"message\": \"Hello, I need help with something.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/contact",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"contact"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Reports",
+			"item": [
+				{
+					"name": "Create Job Report",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reason\": \"INAPPROPRIATE_PHOTOS\",\n    \"comment\": \"Random stuff\" // Optional\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/reports/jobs/:jobId",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"reports",
+								"jobs",
+								":jobId"
+							],
+							"variable": [
+								{
+									"key": "jobId",
+									"value": "62550793-aefb-4891-8159-3a86374622ac"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Chat Report",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reason\": \"INAPPROPRIATE_PHOTOS\",\n    \"comment\": \"Random stuff\" // Optional\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{handi-base-url}}/reports/chats/:chatId",
+							"host": [
+								"{{handi-base-url}}"
+							],
+							"path": [
+								"reports",
+								"chats",
+								":chatId"
+							],
+							"variable": [
+								{
+									"key": "chatId",
+									"value": ""
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Join Waitlist",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"fullName\": \"Saheed Lawanson\",\n    \"email\": \"saheedlawanson47@gmail.com\",\n    \"phoneNumber\": \"+2349084549068\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{handi-base-url}}/v2/waitlist",
+					"host": [
+						"{{handi-base-url}}"
+					],
+					"path": [
+						"v2",
+						"waitlist"
+					]
+				}
+			}
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{handi-id-token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					"pm.request.headers.upsert({",
+					"    key: 'X-Handi-Device-Id',",
+					"    value: 'xxx'",
+					"});",
+					"",
+					"pm.request.headers.upsert({",
+					"    key: 'X-Handi-Platform',",
+					"    value: 'ios'",
+					"});"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

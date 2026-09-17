@@ -1,0 +1,53 @@
+# Path patterns for the User/Provider contexts' active-scan excludePaths, grouped by
+# real-world-side-effect category. dastscanner.yml reads this file and merges the
+# categories whose workflow_dispatch toggle is true (default: all true, i.e. safest)
+# into .zap/automation.yml's User/Provider excludePaths before ZAP runs.
+#
+# Caveat: ZAP context excludePaths match by URL pattern only, not HTTP method — a few
+# entries below also exclude a same-shaped GET/read on that path (e.g. excluding the
+# DELETE-service path also excludes the artisan-services-by-id GET). That's an
+# accepted trade-off for staying simple; see .postman/README.md.
+#
+# The Admin context's excludePaths (money movement, account ban) live directly in
+# automation.yml, not here — they aren't behind a toggle.
+
+# Always excluded, not a toggle: including these breaks the authenticated session
+# ZAP needs for the rest of the scan, it isn't a risk trade-off.
+always:
+  - "${TARGET_URL}/auth/logout.*"
+  - "${TARGET_URL}/auth/change-phone-number.*"
+
+# Repeated active-scan payloads here can fire real SMS through whatever provider the
+# dev environment uses (cost + rate-limit risk).
+sms-otp:
+  - "${TARGET_URL}/auth/resend-otp.*"
+
+# Can trigger push notifications to real other artisans/users matched by category or
+# location — not just the test account being scanned.
+job-notifications:
+  - "${TARGET_URL}/jobs$"
+  - "${TARGET_URL}/jobs/[^/]+/redispatch.*"
+  - "${TARGET_URL}/job-quotes.*"
+  - "${TARGET_URL}/jobs/complete/.*"
+  - "${TARGET_URL}/jobs/artisan/cancel/.*"
+  - "${TARGET_URL}/jobs/user/cancel/.*"
+
+# Sends a chat message to a real counterparty, or hits a real support inbox / mailing
+# list tool.
+chat-contact:
+  - "${TARGET_URL}/chat/messages.*"
+  - "${TARGET_URL}/contact.*"
+  - "${TARGET_URL}/v2/waitlist.*"
+
+# Payment/bank surface — may be wired to a live payment gateway sandbox rather than a
+# fully offline mock.
+payment-bank:
+  - "${TARGET_URL}/payment/session.*"
+  - "${TARGET_URL}/wallet/resolve-account-number.*"
+  - "${TARGET_URL}/withdrawal-requests$"
+  - "${TARGET_URL}/withdrawal-requests/referral.*"
+
+# Irreversible deletes.
+destructive:
+  - "${TARGET_URL}/artisan/services/[^/]+$"
+  - "${TARGET_URL}/withdrawal-requests/[^/]+$"

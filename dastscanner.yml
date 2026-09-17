@@ -1,13 +1,18 @@
 # DAST — authenticated deep scan (OWASP ZAP Automation Framework).
 #
-# Runs a Postman-seeded, authenticated (JSON login), full active scan against a
-# staging/target environment. Findings are reported (SARIF + HTML), never silently
-# dropped; a real scan failure (bad plan, docker/pull error, ZAP crash) or a High-risk
-# finding fails the job and stops the pipeline. Medium-risk findings are reported as
-# warnings but do not block.
+# Runs a Postman-seeded, authenticated, full active scan against a staging/target
+# environment across all three Handi roles — Admin, User, Provider (artisan) — each
+# with its own login and its own scan. Findings are reported (SARIF + HTML), never
+# silently dropped; a real scan failure (bad plan, docker/pull error, ZAP crash) or a
+# High-risk finding fails the job and stops the pipeline. Medium-risk findings are
+# reported as warnings but do not block.
 #
-# Config lives in .zap/automation.yml (ZAP Automation Framework plan) and
-# .postman/collection.json (Postman collection to import — see .postman/README.md).
+# Config lives in .zap/automation.yml (ZAP Automation Framework plan, 3 contexts),
+# .zap/scripts/otp-signin-auth.js (User/Provider two-step phone+OTP login script),
+# .zap/exclude-categories.yml (toggleable active-scan exclusions, see the
+# exclude-* inputs below), and .postman/collection-admin.json /
+# .postman/collection-user.json (Postman collections to import — see
+# .postman/README.md).
 #
 # IMPORTANT: activeScan performs real attack payloads (SQLi, XSS, etc.) against the
 # target. Only run this against systems you are authorized to test. Defaults to
@@ -30,9 +35,35 @@ on:
         description: 'Type exactly "yes" to confirm you are authorized to run active DAST attacks against this target.'
         required: true
         type: string
+      exclude-sms-otp:
+        description: 'Exclude /auth/resend-otp from active scan (real SMS cost/rate-limit risk). Default: excluded.'
+        required: false
+        type: boolean
+        default: true
+      exclude-job-notifications:
+        description: 'Exclude job create/redispatch/quote/cancel/complete from active scan (can push-notify real other users). Default: excluded.'
+        required: false
+        type: boolean
+        default: true
+      exclude-chat-contact:
+        description: 'Exclude chat send / contact form / waitlist from active scan (reaches a real counterparty or inbox). Default: excluded.'
+        required: false
+        type: boolean
+        default: true
+      exclude-payment-bank:
+        description: 'Exclude payment session / bank resolve / withdrawal creation from active scan. Default: excluded.'
+        required: false
+        type: boolean
+        default: true
+      exclude-destructive:
+        description: 'Exclude irreversible deletes (service, withdrawal request) from active scan. Default: excluded.'
+        required: false
+        type: boolean
+        default: true
   schedule:
     # 02:00 UTC Mon-Fri. Adjust to your change window. Targets DAST_STAGING_URL (repo/org
-    # Actions variable) — scheduled runs skip the manual confirmation gate.
+    # Actions variable) — scheduled runs skip the manual confirmation gate and use the
+    # exclude-* defaults (all categories excluded — safest).
     - cron: '0 2 * * 1-5'
 
 permissions:
@@ -42,7 +73,7 @@ permissions:
 jobs:
   dast-deep-scan:
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 180
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with: {persist-credentials: false}
@@ -92,15 +123,75 @@ jobs:
       #     oauth-secret: ${{ secrets.TAILSCALE_OAUTH_SECRET }}
       #     tags: tag:ci
 
+      - name: Apply active-scan exclusion category toggles
+        env:
+          EXCLUDE_SMS_OTP: ${{ inputs.exclude-sms-otp }}
+          EXCLUDE_JOB_NOTIFICATIONS: ${{ inputs.exclude-job-notifications }}
+          EXCLUDE_CHAT_CONTACT: ${{ inputs.exclude-chat-contact }}
+          EXCLUDE_PAYMENT_BANK: ${{ inputs.exclude-payment-bank }}
+          EXCLUDE_DESTRUCTIVE: ${{ inputs.exclude-destructive }}
+        run: |
+          # Merges .zap/exclude-categories.yml's toggled categories into the User/Provider
+          # contexts' excludePaths in the CHECKED-OUT COPY of .zap/automation.yml only —
+          # this runs in the ephemeral job workspace and is never committed back, so it's
+          # fine that the rewrite drops the source file's comments.
+          python3 -m pip install --quiet pyyaml
+          python3 - <<'PY'
+          import os
+          import yaml
+
+          with open(".zap/exclude-categories.yml") as f:
+              categories = yaml.safe_load(f)
+
+          def enabled(env_var):
+              # Empty on the `schedule` trigger (no `inputs` context) -> default true (safest).
+              return os.environ.get(env_var, "true") != "false"
+
+          toggles = {
+              "sms-otp": enabled("EXCLUDE_SMS_OTP"),
+              "job-notifications": enabled("EXCLUDE_JOB_NOTIFICATIONS"),
+              "chat-contact": enabled("EXCLUDE_CHAT_CONTACT"),
+              "payment-bank": enabled("EXCLUDE_PAYMENT_BANK"),
+              "destructive": enabled("EXCLUDE_DESTRUCTIVE"),
+          }
+
+          extra_paths = list(categories.get("always", []))
+          for name, is_on in toggles.items():
+              print(f"exclude category {name}: {'ON' if is_on else 'off'}")
+              if is_on:
+                  extra_paths.extend(categories.get(name, []))
+
+          with open(".zap/automation.yml") as f:
+              plan = yaml.safe_load(f)
+
+          for ctx in plan["env"]["contexts"]:
+              if ctx["name"] in ("User", "Provider"):
+                  existing = list(ctx.get("excludePaths", []))
+                  for p in extra_paths:
+                      if p not in existing:
+                          existing.append(p)
+                  ctx["excludePaths"] = existing
+
+          with open(".zap/automation.yml", "w") as f:
+              yaml.safe_dump(plan, f, sort_keys=False, default_flow_style=False)
+          PY
+
       - name: Run ZAP Automation Framework (deep authenticated scan)
         id: zap
         env:
           TARGET_URL: ${{ steps.target.outputs.target }}
           DAST_ADMIN_USERNAME: ${{ secrets.DAST_ADMIN_USERNAME }}
           DAST_ADMIN_PASSWORD: ${{ secrets.DAST_ADMIN_PASSWORD }}
+          DAST_USER_PHONE: ${{ secrets.DAST_USER_PHONE }}
+          DAST_PROVIDER_PHONE: ${{ secrets.DAST_PROVIDER_PHONE }}
+          DAST_TEST_OTP: ${{ secrets.DAST_TEST_OTP }}
         run: |
-          if [ -z "$DAST_ADMIN_USERNAME" ] || [ -z "$DAST_ADMIN_PASSWORD" ]; then
-            echo "::error::DAST_ADMIN_USERNAME / DAST_ADMIN_PASSWORD secrets are not set."
+          missing=""
+          for v in DAST_ADMIN_USERNAME DAST_ADMIN_PASSWORD DAST_USER_PHONE DAST_PROVIDER_PHONE DAST_TEST_OTP; do
+            [ -z "${!v}" ] && missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing required secrets:$missing"
             exit 1
           fi
 
@@ -110,8 +201,11 @@ jobs:
             -e TARGET_URL \
             -e DAST_ADMIN_USERNAME \
             -e DAST_ADMIN_PASSWORD \
+            -e DAST_USER_PHONE \
+            -e DAST_PROVIDER_PHONE \
+            -e DAST_TEST_OTP \
             -t ghcr.io/zaproxy/zaproxy:stable \
-            bash -c "zap.sh -cmd -addonupdate -addoninstall postman -addoninstall authhelper -autorun /zap/wrk/.zap/automation.yml"
+            bash -c "zap.sh -cmd -addonupdate -addoninstall postman -addoninstall authhelper -addoninstall graaljs -autorun /zap/wrk/.zap/automation.yml"
           ZAP_EXIT=$?
           set -e
 
