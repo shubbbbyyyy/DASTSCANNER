@@ -14,23 +14,23 @@ The exclusion categories file defines URL patterns that ZAP should **skip during
 
 ```mermaid
 flowchart TD
-    subgraph "Workflow Inputs (5 booleans)"
-        I1[exclude-sms-otp<br/>default: true]
-        I2[exclude-job-notifications<br/>default: true]
-        I3[exclude-chat-contact<br/>default: true]
-        I4[exclude-payment-bank<br/>default: true]
-        I5[exclude-destructive<br/>default: true]
+    subgraph Workflow Inputs
+        I1[exclude-sms-otp]
+        I2[exclude-job-notifications]
+        I3[exclude-chat-contact]
+        I4[exclude-payment-bank]
+        I5[exclude-destructive]
     end
 
-    subgraph "Python Merge Script"
+    subgraph Python Merge Script
         READ[Read exclude-categories.yml]
         EVAL[Evaluate toggles]
-        MERGE[Merge matching patterns<br/>into automation.yml]
+        MERGE[Merge matching patterns]
     end
 
-    subgraph "ZAP Automation Plan"
-        UC[User Context<br/>excludePaths]
-        PC[Provider Context<br/>excludePaths]
+    subgraph ZAP Automation Plan
+        UC[User Context excludePaths]
+        PC[Provider Context excludePaths]
     end
 
     I1 --> READ
@@ -140,19 +140,19 @@ These paths are **always excluded** regardless of toggle state. They are hardcod
 
 ```mermaid
 flowchart LR
-    subgraph "Toggle ON (default)"
-        EXCLUDE[Exclude Paths<br/>from Active Scan]
+    subgraph Toggle ON (default)
+        EXCLUDE[Exclude Paths from Active Scan]
     end
 
-    subgraph "Toggle OFF"
-        INCLUDE[Include Paths<br/>in Active Scan]
+    subgraph Toggle OFF
+        INCLUDE[Include Paths in Active Scan]
     end
 
-    TOGGLE{Category Toggle<br/>Value?}
+    TOGGLE{Category Toggle Value?}
     TOGGLE -->|true| EXCLUDE
     TOGGLE -->|false| INCLUDE
 
-    EXCLUDE --> ZAP[ZAP skips these<br/>URL patterns]
+    EXCLUDE --> ZAP[ZAP skips these URL patterns]
     INCLUDE --> ZAP
 
     style EXCLUDE fill:#ff6b6b,color:#fff
@@ -176,24 +176,24 @@ This means:
 
 ```mermaid
 sequenceDiagram
-    participant WF as GitHub Actions<br/>Workflow
+    participant WF as GitHub Actions
     participant PY as Python Script
     participant EC as exclude-categories.yml
     participant AM as automation.yml
 
-    WF->>PY: Run merge script<br/>with toggle values
+    WF->>PY: Run merge script with toggle values
     PY->>EC: Read all categories
     EC-->>PY: Return patterns
 
     loop For each enabled toggle
-        PY->>PY: Collect matching<br/>URL patterns
+        PY->>PY: Collect matching URL patterns
     end
 
     PY->>AM: Read current excludePaths
-    PY->>AM: Append new patterns<br/>to User + Provider contexts
+    PY->>AM: Append new patterns to User and Provider contexts
     PY->>AM: Write modified YAML
 
-    Note over AM: Only modified in<br/>ephemeral workspace —<br/>never committed back
+    Note over AM: Only modified in ephemeral workspace
 ```
 
 ---

@@ -22,35 +22,35 @@ The GitHub Actions workflow is the **orchestrator** of the entire DAST pipeline.
 flowchart TD
     START([Trigger]) --> TRIGGER_TYPE{Trigger Type?}
 
-    TRIGGER_TYPE -->|Manual<br/>workflow_dispatch| MANUAL_INPUTS[Collect Inputs:<br/>target-url, allow-production,<br/>confirm-authorized, 5 exclusion toggles]
-    TRIGGER_TYPE -->|Scheduled<br/>cron 0 2 * * 1-5| CRON_DEFAULTS[Use Defaults:<br/>target = DAST_STAGING_URL<br/>all exclusions ON]
+    TRIGGER_TYPE -->|Manual - workflow_dispatch| MANUAL_INPUTS[Collect Inputs]
+    TRIGGER_TYPE -->|Scheduled - cron| CRON_DEFAULTS[Use Defaults]
 
     MANUAL_INPUTS --> VALIDATE_TARGET
     CRON_DEFAULTS --> VALIDATE_TARGET
 
     VALIDATE_TARGET{Target URL Valid?}
-    VALIDATE_TARGET -->|URL contains "prod"| REJECT_PROD[REJECT:<br/>Production URL detected.<br/>Set allow-production: true]
-    VALIDATE_TARGET -->|confirm-authorized ≠ "yes"| REJECT_AUTH[REJECT:<br/>Authorization not confirmed]
-    VALIDATE_TARGET -->|✓ Valid| RESOLVE_URL[Resolve URL<br/>from input or DAST_STAGING_URL]
+    VALIDATE_TARGET -->|URL contains prod| REJECT_PROD[REJECT - Production URL]
+    VALIDATE_TARGET -->|confirm-authorized != yes| REJECT_AUTH[REJECT - No authorization]
+    VALIDATE_TARGET -->|Valid| RESOLVE_URL[Resolve URL]
 
-    RESOLVE_URL --> MERGE_EXCLUSIONS[Merge Exclusion Toggles<br/>into automation.yml]
+    RESOLVE_URL --> MERGE_EXCLUSIONS[Merge Exclusion Toggles]
 
-    MERGE_EXCLUSIONS --> LAUNCH_DOCKER[Launch ZAP Docker Container<br/>ghcr.io/zaproxy/zaproxy:stable]
+    MERGE_EXCLUSIONS --> LAUNCH_DOCKER[Launch ZAP Docker Container]
 
-    LAUNCH_DOCKER --> INSTALL_ADDONS[Install Add-ons:<br/>postman, authhelper, graaljs]
-    INSTALL_ADDONS --> RUN_ZAP[Run ZAP Autorun<br/>zap.sh -cmd -autorun .zap/automation.yml]
+    LAUNCH_DOCKER --> INSTALL_ADDONS[Install Add-ons]
+    INSTALL_ADDONS --> RUN_ZAP[Run ZAP Autorun]
 
     RUN_ZAP --> ZAP_EXIT{ZAP Exit Code?}
 
-    ZAP_EXIT -->|0| NO_HIGH[No High-risk findings<br/>✓ Pass]
-    ZAP_EXIT -->|2| MEDIUM_FOUND[Medium-risk findings<br/>⚠ Warning — job still passes]
-    ZAP_EXIT -->|other| HIGH_OR_FAIL[High-risk findings or<br/>scan failure ✗ Fail]
+    ZAP_EXIT -->|0| NO_HIGH[No High-risk findings - Pass]
+    ZAP_EXIT -->|2| MEDIUM_FOUND[Medium-risk findings - Warning]
+    ZAP_EXIT -->|other| HIGH_OR_FAIL[High-risk findings or scan failure]
 
-    NO_HIGH --> UPLOAD_SARIF[Upload SARIF to<br/>GitHub Code Scanning]
+    NO_HIGH --> UPLOAD_SARIF[Upload SARIF]
     MEDIUM_FOUND --> UPLOAD_SARIF
     HIGH_OR_FAIL --> UPLOAD_SARIF
 
-    UPLOAD_SARIF --> UPLOAD_ARTIFACTS[Upload Reports as Artifacts<br/>zap-dast.json + zap-dast-report.html<br/>30-day retention]
+    UPLOAD_SARIF --> UPLOAD_ARTIFACTS[Upload Reports as Artifacts]
 
     UPLOAD_ARTIFACTS --> END([Done])
 
@@ -82,19 +82,19 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    INPUT{target-url<br/>provided?} -->|Yes| USE_INPUT[Use provided URL]
-    INPUT -->|No| CHECK_VAR{DAST_STAGING_URL<br/>repo variable set?}
+    INPUT{target-url provided?} -->|Yes| USE_INPUT[Use provided URL]
+    INPUT -->|No| CHECK_VAR{DAST_STAGING_URL set?}
     CHECK_VAR -->|Yes| USE_VAR[Use DAST_STAGING_URL]
-    CHECK_VAR -->|No| FAIL[FAIL:<br/>No target URL configured]
+    CHECK_VAR -->|No| FAIL[FAIL - No target URL]
 
-    USE_INPUT --> VALIDATE{Contains "prod"?}
+    USE_INPUT --> VALIDATE{Contains prod?}
     USE_VAR --> VALIDATE
 
-    VALIDATE -->|Yes| GATE{allow-production<br/>= true?}
-    VALIDATE -->|No| READY[✓ URL Ready]
+    VALIDATE -->|Yes| GATE{allow-production = true?}
+    VALIDATE -->|No| READY[URL Ready]
 
     GATE -->|Yes| READY
-    GATE -->|No| BLOCK[BLOCKED:<br/>Production safety gate]
+    GATE -->|No| BLOCK[Blocked - Production safety gate]
 ```
 
 ---
@@ -113,13 +113,13 @@ This is a **runtime mutation** — the committed `automation.yml` never changes.
 
 ```mermaid
 flowchart LR
-    EXCLUDE_YML[".zap/exclude-categories.yml"] --> PYTHON[Python Script<br/>inline in workflow]
+    EXCLUDE_YML[exclude-categories.yml] --> PYTHON[Python Script]
     TOGGLES[5 Boolean Inputs] --> PYTHON
-    AUTOMATION[".zap/automation.yml<br/>(original)"] --> PYTHON
+    AUTOMATION[automation.yml - original] --> PYTHON
 
-    PYTHON -->|merges selected patterns| MODIFIED["automation.yml<br/>(modified in workspace)"]
+    PYTHON -->|merges selected patterns| MODIFIED[automation.yml - modified]
 
-    MODIFIED --> ZAP[ZAP reads modified<br/>automation.yml]
+    MODIFIED --> ZAP[ZAP reads modified automation.yml]
 ```
 
 ---

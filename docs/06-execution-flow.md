@@ -8,65 +8,50 @@ This document traces the **complete pipeline lifecycle** from trigger to report,
 
 ```mermaid
 flowchart TD
-    subgraph "Phase 1: Trigger & Validation"
-        T1([Manual Trigger<br/>workflow_dispatch])
-        T2([Scheduled Trigger<br/>cron: Mon-Fri 02:00 UTC])
-        INPUTS[Collect Inputs<br/>target-url, allow-production,<br/>confirm-authorized, 5 toggles]
-        RESOLVE[Resolve Target URL<br/>input → DAST_STAGING_URL fallback]
+    subgraph Phase 1 - Trigger and Validation
+        T1([Manual Trigger])
+        T2([Scheduled Trigger])
+        INPUTS[Collect Inputs]
+        RESOLVE[Resolve Target URL]
         VALIDATE{Valid?}
-        REJECT[REJECT<br/>production gate or<br/>authorization missing]
+        REJECT[REJECT]
     end
 
-    subgraph "Phase 2: Configuration Merge"
-        READ_EXCLUDE[Read .zap/exclude-categories.yml]
+    subgraph Phase 2 - Configuration Merge
+        READ_EXCLUDE[Read exclude-categories.yml]
         EVAL_TOGGLES[Evaluate 5 Boolean Toggles]
-        MERGE[Merge Selected Patterns<br/>into automation.yml]
-        REWRITE[Rewrite automation.yml<br/>in ephemeral workspace]
+        MERGE[Merge Selected Patterns]
+        REWRITE[Rewrite automation.yml]
     end
 
-    subgraph "Phase 3: ZAP Launch"
-        DOCKER[Launch Docker Container<br/>ghcr.io/zaproxy/zaproxy:stable]
-        ADDONS[Install Add-ons<br/>postman, authhelper, graaljs]
-        AUTORUN[Run: zap.sh -cmd<br/>-autorun .zap/automation.yml]
+    subgraph Phase 3 - ZAP Launch
+        DOCKER[Launch Docker Container]
+        ADDONS[Install Add-ons]
+        AUTORUN[Run ZAP Autorun]
     end
 
-    subgraph "Phase 4: Scan Execution"
-        IMPORT_SEED[Import Postman Collections<br/>Seed Sitemap]
-        
-        subgraph "Admin Context"
-            ADMIN_AUTH[Admin Login<br/>JSON → POST /auth/admin/signin]
-            ADMIN_SPIDER[Admin Spider<br/>5 min]
-            ADMIN_AJAX[Admin SpiderAjax<br/>5 min]
-            ADMIN_PASSIVE[Passive Scan Wait<br/>5 min]
-            ADMIN_ACTIVE[Admin Active Scan<br/>35 min]
-        end
-
-        subgraph "User Context"
-            USER_AUTH[User Login<br/>Script → Phone + OTP]
-            USER_SPIDER[User Spider<br/>5 min]
-            USER_AJAX[User SpiderAjax<br/>5 min]
-            USER_PASSIVE[Passive Scan Wait<br/>5 min]
-            USER_ACTIVE[User Active Scan<br/>35 min]
-        end
-
-        subgraph "Provider Context"
-            PROV_AUTH[Provider Login<br/>Script → Phone + OTP<br/>Role: ARTISAN]
-            PROV_SPIDER[Provider Spider<br/>5 min]
-            PROV_AJAX[Provider SpiderAjax<br/>5 min]
-            PROV_PASSIVE[Passive Scan Wait<br/>5 min]
-            PROV_ACTIVE[Provider Active Scan<br/>35 min]
-        end
+    subgraph Phase 4 - Scan Execution
+        IMPORT_SEED[Import Postman Collections]
+        ADMIN_AUTH[Admin Login]
+        ADMIN_SPIDER[Admin Spider]
+        ADMIN_ACTIVE[Admin Active Scan]
+        USER_AUTH[User Login]
+        USER_SPIDER[User Spider]
+        USER_ACTIVE[User Active Scan]
+        PROV_AUTH[Provider Login]
+        PROV_SPIDER[Provider Spider]
+        PROV_ACTIVE[Provider Active Scan]
     end
 
-    subgraph "Phase 5: Report & Upload"
-        SARIF_GEN[Generate SARIF<br/>zap-dast.json]
-        HTML_GEN[Generate HTML<br/>zap-dast-report.html]
-        UPLOAD_SARIF[Upload to GitHub<br/>Code Scanning]
-        UPLOAD_ARTIFACT[Upload as Artifacts<br/>30-day retention]
+    subgraph Phase 5 - Report and Upload
+        SARIF_GEN[Generate SARIF]
+        HTML_GEN[Generate HTML]
+        UPLOAD_SARIF[Upload to Code Scanning]
+        UPLOAD_ARTIFACT[Upload as Artifacts]
         EXIT_CODE{ZAP Exit Code}
-        PASS([✅ Pass])
-        WARN([⚠️ Warning])
-        FAIL([❌ Fail])
+        PASS([Pass])
+        WARN([Warning])
+        FAIL([Fail])
     end
 
     T1 --> INPUTS
@@ -79,9 +64,9 @@ flowchart TD
     REWRITE --> DOCKER --> ADDONS --> AUTORUN
     AUTORUN --> IMPORT_SEED
 
-    IMPORT_SEED --> ADMIN_AUTH --> ADMIN_SPIDER --> ADMIN_AJAX --> ADMIN_PASSIVE --> ADMIN_ACTIVE
-    ADMIN_ACTIVE --> USER_AUTH --> USER_SPIDER --> USER_AJAX --> USER_PASSIVE --> USER_ACTIVE
-    USER_ACTIVE --> PROV_AUTH --> PROV_SPIDER --> PROV_AJAX --> PROV_PASSIVE --> PROV_ACTIVE
+    IMPORT_SEED --> ADMIN_AUTH --> ADMIN_SPIDER --> ADMIN_ACTIVE
+    ADMIN_ACTIVE --> USER_AUTH --> USER_SPIDER --> USER_ACTIVE
+    USER_ACTIVE --> PROV_AUTH --> PROV_SPIDER --> PROV_ACTIVE
 
     PROV_ACTIVE --> SARIF_GEN --> HTML_GEN
     HTML_GEN --> UPLOAD_SARIF --> UPLOAD_ARTIFACT --> EXIT_CODE
@@ -101,59 +86,59 @@ flowchart TD
 
 ```mermaid
 graph TB
-    subgraph "Orchestration"
+    subgraph Orchestration
         WF[dastscanner.yml]
     end
 
-    subgraph "Configuration"
+    subgraph Configuration
         EC[exclude-categories.yml]
         AUTO[automation.yml]
         OTP[otp-signin-auth.js]
     end
 
-    subgraph "API Catalog"
+    subgraph API Catalog
         PC_A[collection-admin.json]
         PC_U[collection-user.json]
     end
 
-    subgraph "Runtime"
+    subgraph Runtime
         ZAP[ZAP Docker Container]
         ADDON_PM[postman add-on]
         ADDON_AH[authhelper add-on]
         ADDON_GJ[graaljs add-on]
     end
 
-    subgraph "Output"
+    subgraph Output
         SARIF[zap-dast.json]
         HTML[zap-dast-report.html]
         GCS[GitHub Code Scanning]
         ARTIFACT[Workflow Artifacts]
     end
 
-    WF -->|"reads toggles"| EC
-    WF -->|"rewrites at runtime"| AUTO
-    WF -->|"launches"| ZAP
-    WF -->|"injects secrets"| ZAP
+    WF -->|reads toggles| EC
+    WF -->|rewrites at runtime| AUTO
+    WF -->|launches| ZAP
+    WF -->|injects secrets| ZAP
 
-    AUTO -->|"autorun plan"| ZAP
-    AUTO -->|"imports"| PC_A
-    AUTO -->|"imports"| PC_U
-    AUTO -->|"runs script"| OTP
+    AUTO -->|autorun plan| ZAP
+    AUTO -->|imports| PC_A
+    AUTO -->|imports| PC_U
+    AUTO -->|runs script| OTP
 
-    ZAP -->|"installs"| ADDON_PM
-    ZAP -->|"installs"| ADDON_AH
-    ZAP -->|"installs"| ADDON_GJ
+    ZAP -->|installs| ADDON_PM
+    ZAP -->|installs| ADDON_AH
+    ZAP -->|installs| ADDON_GJ
 
-    ADDON_PM -->|"imports collections"| PC_A
-    ADDON_PM -->|"imports collections"| PC_U
-    ADDON_AH -->|"injects Bearer token"| ZAP
-    ADDON_GJ -->|"executes"| OTP
+    ADDON_PM -->|imports collections| PC_A
+    ADDON_PM -->|imports collections| PC_U
+    ADDON_AH -->|injects Bearer token| ZAP
+    ADDON_GJ -->|executes| OTP
 
-    ZAP -->|"generates"| SARIF
-    ZAP -->|"generates"| HTML
-    SARIF -->|"upload-sarif action"| GCS
-    SARIF -->|"upload-artifact action"| ARTIFACT
-    HTML -->|"upload-artifact action"| ARTIFACT
+    ZAP -->|generates| SARIF
+    ZAP -->|generates| HTML
+    SARIF -->|upload-sarif action| GCS
+    SARIF -->|upload-artifact action| ARTIFACT
+    HTML -->|upload-artifact action| ARTIFACT
 ```
 
 ---
@@ -167,33 +152,33 @@ gantt
     axisFormat %M:%S
 
     section Setup
-    Checkout & Validate           :a1, 00:00, 5s
-    Merge Exclusions              :a2, after a1, 3s
-    Docker Launch & Add-ons       :a3, after a2, 30s
+    Checkout and Validate    :a1, 00:00, 5s
+    Merge Exclusions         :a2, after a1, 3s
+    Docker Launch and Addons :a3, after a2, 30s
 
     section Admin
-    Postman Import (Admin)        :b1, after a3, 5s
-    Admin Spider                  :b2, after b1, 5m
-    Admin SpiderAjax              :b3, after b2, 5m
-    Admin Passive Wait            :b4, after b3, 5m
-    Admin Active Scan             :b5, after b4, 35m
+    Postman Import Admin     :b1, after a3, 5s
+    Admin Spider             :b2, after b1, 5m
+    Admin SpiderAjax         :b3, after b2, 5m
+    Admin Passive Wait       :b4, after b3, 5m
+    Admin Active Scan        :b5, after b4, 35m
 
     section User
-    Postman Import (User)         :c1, after b5, 5s
-    User Spider                   :c2, after c1, 5m
-    User SpiderAjax               :c3, after c2, 5m
-    User Passive Wait             :c4, after c3, 5m
-    User Active Scan              :c5, after c4, 35m
+    Postman Import User      :c1, after b5, 5s
+    User Spider              :c2, after c1, 5m
+    User SpiderAjax          :c3, after c2, 5m
+    User Passive Wait        :c4, after c3, 5m
+    User Active Scan         :c5, after c4, 35m
 
     section Provider
-    Provider Spider               :d1, after c5, 5m
-    Provider SpiderAjax           :d2, after d1, 5m
-    Provider Passive Wait         :d3, after d2, 5m
-    Provider Active Scan          :d4, after d3, 35m
+    Provider Spider          :d1, after c5, 5m
+    Provider SpiderAjax      :d2, after d1, 5m
+    Provider Passive Wait    :d3, after d2, 5m
+    Provider Active Scan     :d4, after d3, 35m
 
     section Reports
-    Generate Reports              :e1, after d4, 10s
-    Upload Results                :e2, after e1, 10s
+    Generate Reports         :e1, after d4, 10s
+    Upload Results           :e2, after e1, 10s
 ```
 
 **Estimated total:** ~100–110 minutes (with generous timeouts)
@@ -204,33 +189,33 @@ gantt
 
 ```mermaid
 flowchart LR
-    subgraph "Input Data"
-        SECRETS[GitHub Secrets<br/>credentials]
-        TOGGLES[Workflow Inputs<br/>exclusion toggles]
-        URL[Target URL<br/>staging endpoint]
+    subgraph Input Data
+        SECRETS[GitHub Secrets]
+        TOGGLES[Workflow Inputs]
+        URL[Target URL]
     end
 
-    subgraph "Static Config"
-        AUTOMATION_YML["automation.yml<br/>(scan plan)"]
-        EXCLUDE_YML["exclude-categories.yml<br/>(exclusion patterns)"]
-        POSTMAN_A["collection-admin.json<br/>(44 endpoints)"]
-        POSTMAN_U["collection-user.json<br/>(93 endpoints)"]
-        OTP_JS["otp-signin-auth.js<br/>(auth script)"]
+    subgraph Static Config
+        AUTOMATION_YML[automation.yml]
+        EXCLUDE_YML[exclude-categories.yml]
+        POSTMAN_A[collection-admin.json]
+        POSTMAN_U[collection-user.json]
+        OTP_JS[otp-signin-auth.js]
     end
 
-    subgraph "Runtime Artifacts"
-        MODIFIED_YML["automation.yml<br/>(merged exclusions)"]
+    subgraph Runtime Artifacts
+        MODIFIED_YML[automation.yml - modified]
         ZAP_LOG[ZAP Scan Log]
     end
 
-    subgraph "Output Data"
-        SARIF_OUT["zap-dast.json<br/>(SARIF findings)"]
-        HTML_OUT["zap-dast-report.html<br/>(human-readable report)"]
+    subgraph Output Data
+        SARIF_OUT[zap-dast.json]
+        HTML_OUT[zap-dast-report.html]
     end
 
-    subgraph "External Systems"
-        GITHUB_SC[GITHUB_CODE_SCANNING<br/>(SARIF ingestion)]
-        ARTIFACTS[Workflow Artifacts<br/>(30-day retention)]
+    subgraph External Systems
+        GITHUB_SC[GitHub Code Scanning]
+        ARTIFACTS[Workflow Artifacts]
     end
 
     SECRETS --> ZAP_LOG
@@ -272,15 +257,15 @@ flowchart LR
 flowchart TD
     FAIL([Pipeline Failure]) --> F1{Failure Type?}
 
-    F1 -->|Target URL invalid| F1A[No scan runs<br/>Clear error message]
-    F1 -->|Docker pull fails| F1B[Job fails immediately<br/>Check network / GHCR access]
-    F1 -->|ZAP add-on install fails| F1C[Job fails<br/>Check add-on names / versions]
-    F1 -->|Auth fails for all roles| F1D[Scan runs unauthenticated<br/>Low coverage, job may still pass]
-    F1 -->|ZAP crashes| F1E[Job fails<br/>Check ZAP version / memory]
-    F1 -->|Active scan finds High risk| F1F[Job fails<br/>Exit code ≠ 0,2]
-    F1 -->|SARIF upload fails| F1G[Reports still available<br/>as artifacts]
+    F1 -->|Target URL invalid| F1A[No scan runs]
+    F1 -->|Docker pull fails| F1B[Job fails immediately]
+    F1 -->|ZAP add-on install fails| F1C[Job fails]
+    F1 -->|Auth fails for all roles| F1D[Scan runs unauthenticated]
+    F1 -->|ZAP crashes| F1E[Job fails]
+    F1 -->|Active scan finds High risk| F1F[Job fails]
+    F1 -->|SARIF upload fails| F1G[Reports available as artifacts]
 
-    F1A --> DIAG[Diagnose from<br/>job log output]
+    F1A --> DIAG[Diagnose from job log]
     F1B --> DIAG
     F1C --> DIAG
     F1D --> DIAG

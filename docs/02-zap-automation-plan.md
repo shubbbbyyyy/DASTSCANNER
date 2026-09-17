@@ -16,30 +16,30 @@ This file is the heart of the scan logic. It defines **three parallel security p
 
 ```mermaid
 flowchart TD
-    START([ZAP Starts<br/>zap.sh -autorun .zap/automation.yml]) --> IMPORT1[Import Postman Collection<br/>collection-admin.json]
-    IMPORT1 --> IMPORT2[Import Postman Collection<br/>collection-user.json]
-    IMPORT2 --> PASSIVE_CONF[Configure Passive Scan<br/>maxAlertsPerRule: 0 unlimited]
+    START([ZAP Starts]) --> IMPORT1[Import Admin Collection]
+    IMPORT1 --> IMPORT2[Import User Collection]
+    IMPORT2 --> PASSIVE_CONF[Configure Passive Scan]
 
-    PASSIVE_CONF --> ADMIN_AUTH[Setup Admin Context<br/>JSON auth → POST /auth/admin/signin]
-    ADMIN_AUTH --> ADMIN_CRAWL[Admin Spider<br/>5 min max]
-    ADMIN_CRAWL --> ADMIN_AJAX[Admin SpiderAjax<br/>5 min max]
-    ADMIN_AJAX --> ADMIN_PASSIVE[Admin Passive Scan Wait<br/>5 min]
-    ADMIN_PASSIVE --> ADMIN_ACTIVE[Admin Active Scan<br/>Default Policy, Medium strength<br/>35 min max, 10 min/rule]
+    PASSIVE_CONF --> ADMIN_AUTH[Setup Admin Context]
+    ADMIN_AUTH --> ADMIN_CRAWL[Admin Spider]
+    ADMIN_CRAWL --> ADMIN_AJAX[Admin SpiderAjax]
+    ADMIN_AJAX --> ADMIN_PASSIVE[Admin Passive Wait]
+    ADMIN_PASSIVE --> ADMIN_ACTIVE[Admin Active Scan]
 
-    ADMIN_ACTIVE --> USER_AUTH[Setup User Context<br/>Script auth → OTP flow]
-    USER_AUTH --> USER_CRAWL[User Spider<br/>5 min max]
-    USER_CRAWL --> USER_AJAX[User SpiderAjax<br/>5 min max]
-    USER_AJAX --> USER_PASSIVE[User Passive Scan Wait<br/>5 min]
-    USER_PASSIVE --> USER_ACTIVE[User Active Scan<br/>Default Policy, Medium strength<br/>35 min max, 10 min/rule]
+    ADMIN_ACTIVE --> USER_AUTH[Setup User Context]
+    USER_AUTH --> USER_CRAWL[User Spider]
+    USER_CRAWL --> USER_AJAX[User SpiderAjax]
+    USER_AJAX --> USER_PASSIVE[User Passive Wait]
+    USER_PASSIVE --> USER_ACTIVE[User Active Scan]
 
-    USER_ACTIVE --> PROV_AUTH[Setup Provider Context<br/>Script auth → OTP flow<br/>Role: ARTISAN]
-    PROV_AUTH --> PROV_CRAWL[Provider Spider<br/>5 min max]
-    PROV_CRAWL --> PROV_AJAX[Provider SpiderAjax<br/>5 min max]
-    PROV_AJAX --> PROV_PASSIVE[Provider Passive Scan Wait<br/>5 min]
-    PROV_PASSIVE --> PROV_ACTIVE[Provider Active Scan<br/>Default Policy, Medium strength<br/>35 min max, 10 min/rule]
+    USER_ACTIVE --> PROV_AUTH[Setup Provider Context]
+    PROV_AUTH --> PROV_CRAWL[Provider Spider]
+    PROV_CRAWL --> PROV_AJAX[Provider SpiderAjax]
+    PROV_AJAX --> PROV_PASSIVE[Provider Passive Wait]
+    PROV_PASSIVE --> PROV_ACTIVE[Provider Active Scan]
 
-    PROV_ACTIVE --> REPORT_SARIF[Generate SARIF Report<br/>→ zap-dast.json]
-    REPORT_SARIF --> REPORT_HTML[Generate HTML Report<br/>→ zap-dast-report.html]
+    PROV_ACTIVE --> REPORT_SARIF[Generate SARIF Report]
+    REPORT_SARIF --> REPORT_HTML[Generate HTML Report]
 
     REPORT_HTML --> EXIT([Exit])
 
@@ -69,11 +69,11 @@ sequenceDiagram
     participant ZAP
     participant AdminAPI
 
-    ZAP->>AdminAPI: POST /auth/admin/signin<br/>{email, password}
-    AdminAPI-->>ZAP: 200 OK<br/>{data: {idToken: "eyJ..."}}
-    Note over ZAP: Extract idToken from JSON<br/>Set as Authorization header
-    ZAP->>AdminAPI: GET /admin/users<br/>Authorization: Bearer eyJ...
-    AdminAPI-->>ZAP: 200 OK (authenticated)
+    ZAP->>AdminAPI: POST /auth/admin/signin
+    AdminAPI-->>ZAP: 200 OK - idToken returned
+    Note over ZAP: Extract idToken and set Authorization header
+    ZAP->>AdminAPI: GET /admin/users with Bearer token
+    AdminAPI-->>ZAP: 200 OK - authenticated
 ```
 
 ### Context: User
@@ -101,15 +101,15 @@ sequenceDiagram
     participant ZAP
     participant HandiAPI
 
-    ZAP->>HandiAPI: POST /auth/signin<br/>{role: "USER", phoneNumber: "+234..."}
-    HandiAPI-->>ZAP: 200 OK<br/>{data: {sessionId: "abc123"}}
+    ZAP->>HandiAPI: POST /auth/signin with role and phone
+    HandiAPI-->>ZAP: 200 OK - sessionId returned
 
-    ZAP->>HandiAPI: POST /auth/verify-phone-number<br/>{sessionId: "abc123", phoneNumber: "+234...", code: "123456"}
-    HandiAPI-->>ZAP: 200 OK<br/>{data: {idToken: "eyJ..."}}
+    ZAP->>HandiAPI: POST /auth/verify-phone-number with sessionId and OTP
+    HandiAPI-->>ZAP: 200 OK - idToken returned
 
-    Note over ZAP: Extract idToken from JSON<br/>Set as Authorization header
-    ZAP->>HandiAPI: GET /jobs<br/>Authorization: Bearer eyJ...
-    HandiAPI-->>ZAP: 200 OK (authenticated)
+    Note over ZAP: Extract idToken and set Authorization header
+    ZAP->>HandiAPI: GET /jobs with Bearer token
+    HandiAPI-->>ZAP: 200 OK - authenticated
 ```
 
 ---

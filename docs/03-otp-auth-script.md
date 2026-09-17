@@ -19,20 +19,20 @@ This custom Graal.js script implements that two-step flow so ZAP can authenticat
 
 ```mermaid
 flowchart TD
-    START([ZAP calls authenticate]) --> STEP1[Step 1: Sign In<br/>POST /auth/signin<br/>Body: {role, phoneNumber}]
+    START([ZAP calls authenticate]) --> STEP1[Step 1: Sign In - POST /auth/signin]
 
-    STEP1 --> CHECK1{Response<br/>OK?}
-    CHECK1 -->|No| FAIL1[Return null<br/>Auth failed at sign-in]
-    CHECK1 -->|Yes| EXTRACT1[Extract sessionId<br/>from response.data.sessionId]
+    STEP1 --> CHECK1{Response OK?}
+    CHECK1 -->|No| FAIL1[Return null - Auth failed]
+    CHECK1 -->|Yes| EXTRACT1[Extract sessionId]
 
-    EXTRACT1 --> STEP2[Step 2: Verify OTP<br/>POST /auth/verify-phone-number<br/>Body: {sessionId, phoneNumber, code}]
+    EXTRACT1 --> STEP2[Step 2: Verify OTP - POST /auth/verify-phone-number]
 
-    STEP2 --> CHECK2{Response<br/>OK?}
-    CHECK2 -->|No| FAIL2[Return null<br/>Auth failed at OTP verify]
-    CHECK2 -->|Yes| EXTRACT2[Extract idToken<br/>from response.data.idToken]
+    STEP2 --> CHECK2{Response OK?}
+    CHECK2 -->|No| FAIL2[Return null - OTP verify failed]
+    CHECK2 -->|Yes| EXTRACT2[Extract idToken]
 
-    EXTRACT2 --> BUILD_MSG[Build ZAP HttpMessage<br/>with Authorization header]
-    BUILD_MSG --> RETURN([Return message<br/>ZAP uses for session management])
+    EXTRACT2 --> BUILD_MSG[Build HttpMessage with Auth header]
+    BUILD_MSG --> RETURN([Return message])
 
     FAIL1 --> RETURN_NULL([Return null])
     FAIL2 --> RETURN_NULL

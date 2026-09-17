@@ -14,20 +14,20 @@ The Postman collections serve as **API endpoint catalogs** that ZAP imports befo
 
 ```mermaid
 flowchart TD
-    subgraph "Before Import"
-        ZAP_SITEMAP[ZAP Sitemap<br/>Empty or sparse]
-        POSTMAN[".postman/<br/>collection-*.json"]
+    subgraph Before Import
+        ZAP_SITEMAP[ZAP Sitemap - Empty]
+        POSTMAN[Postman Collections]
     end
 
-    subgraph "After Import"
-        ZAP_SITEMAP_FULL[ZAP Sitemap<br/>All API routes populated]
+    subgraph After Import
+        ZAP_SITEMAP_FULL[ZAP Sitemap - All routes]
     end
 
-    POSTMAN -->|ZAP Postman Add-on<br/>imports collections| ZAP_SITEMAP_FULL
+    POSTMAN -->|Postman Add-on imports| ZAP_SITEMAP_FULL
     ZAP_SITEMAP --> ZAP_SITEMAP_FULL
 
-    ZAP_SITEMAP_FULL --> SPIDER[Spider discovers<br/>additional routes via links]
-    ZAP_SITEMAP_FULL --> ACTIVE[Active Scan tests<br/>all known routes]
+    ZAP_SITEMAP_FULL --> SPIDER[Spider discovers routes]
+    ZAP_SITEMAP_FULL --> ACTIVE[Active Scan tests routes]
 
     style POSTMAN fill:#4dabf7,color:#fff
     style ZAP_SITEMAP_FULL fill:#51cf66,color:#000
@@ -128,7 +128,7 @@ pm.request.headers.add({ key: 'X-Handi-Platform', value: 'ios' });
 sequenceDiagram
     participant ZAP as ZAP Automation
     participant PM as Postman Add-on
-    participant COL as collection-*.json
+    participant COL as Collection JSON
 
     ZAP->>PM: Import Postman Collection
     PM->>COL: Read collection file
@@ -136,12 +136,12 @@ sequenceDiagram
 
     loop For each request in collection
         PM->>ZAP: Add URL to sitemap
-        Note over ZAP: URL + method recorded<br/>in ZAP's site tree
+        Note over ZAP: URL and method recorded
     end
 
-    Note over ZAP: Sitemap now contains<br/>all API routes
-    ZAP->>ZAP: Spider discovers additional<br/>routes via link following
-    ZAP->>ZAP: Active Scan tests all<br/>known routes
+    Note over ZAP: Sitemap now contains all API routes
+    ZAP->>ZAP: Spider discovers additional routes
+    ZAP->>ZAP: Active Scan tests all known routes
 ```
 
 ---

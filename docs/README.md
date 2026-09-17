@@ -35,47 +35,47 @@ The scanner tests from three perspectives simultaneously:
 
 ```mermaid
 graph TB
-    subgraph "GitHub Actions"
-        TRIGGER[Trigger<br/>Manual / Cron]
+    subgraph GitHub Actions
+        TRIGGER[Trigger]
         VALIDATE[Validate Target URL]
         MERGE[Merge Exclusion Toggles]
-        UPLOAD_SARIF[Upload SARIF to<br/>Code Scanning]
-        UPLOAD_ARTIFACT[Upload Reports<br/>as Artifacts]
+        UPLOAD_SARIF[Upload SARIF]
+        UPLOAD_ARTIFACT[Upload Reports]
     end
 
-    subgraph "Configuration Files"
-        AUTOMATION[".zap/automation.yml"]
-        EXCLUDE[".zap/exclude-categories.yml"]
-        OTP_SCRIPT[".zap/scripts/otp-signin-auth.js"]
-        POSTMAN_ADMIN[".postman/collection-admin.json"]
-        POSTMAN_USER[".postman/collection-user.json"]
+    subgraph Configuration Files
+        AUTOMATION[automation.yml]
+        EXCLUDE[exclude-categories.yml]
+        OTP_SCRIPT[otp-signin-auth.js]
+        POSTMAN_ADMIN[collection-admin.json]
+        POSTMAN_USER[collection-user.json]
     end
 
-    subgraph "Docker — OWASP ZAP"
-        IMPORT[Import Postman<br/>Collections]
-        ADMIN_CRAWL[Admin Crawl<br/>Spider + SpiderAjax]
+    subgraph Docker - OWASP ZAP
+        IMPORT[Import Postman Collections]
+        ADMIN_CRAWL[Admin Crawl]
         ADMIN_SCAN[Admin Active Scan]
-        USER_CRAWL[User Crawl<br/>Spider + SpiderAjax]
+        USER_CRAWL[User Crawl]
         USER_SCAN[User Active Scan]
-        PROVIDER_CRAWL[Provider Crawl<br/>Spider + SpiderAjax]
+        PROVIDER_CRAWL[Provider Crawl]
         PROVIDER_SCAN[Provider Active Scan]
-        REPORT_GEN[Generate Reports<br/>SARIF + HTML]
+        REPORT_GEN[Generate Reports]
     end
 
     TRIGGER --> VALIDATE --> MERGE
-    MERGE -->|"rewrites"| AUTOMATION
-    MERGE -->|"reads"| EXCLUDE
-    AUTOMATION -->|"autorun"| IMPORT
-    OTP_SCRIPT -->|"auth for User/Provider"| USER_CRAWL
-    OTP_SCRIPT -->|"auth for User/Provider"| PROVIDER_CRAWL
+    MERGE -->|rewrites| AUTOMATION
+    MERGE -->|reads| EXCLUDE
+    AUTOMATION -->|autorun| IMPORT
+    OTP_SCRIPT -->|auth for User/Provider| USER_CRAWL
+    OTP_SCRIPT -->|auth for User/Provider| PROVIDER_CRAWL
     POSTMAN_ADMIN --> IMPORT
     POSTMAN_USER --> IMPORT
     IMPORT --> ADMIN_CRAWL --> ADMIN_SCAN
     ADMIN_SCAN --> USER_CRAWL --> USER_SCAN
     USER_SCAN --> PROVIDER_CRAWL --> PROVIDER_SCAN
     PROVIDER_SCAN --> REPORT_GEN
-    REPORT_GEN -->|"zap-dast.json"| UPLOAD_SARIF
-    REPORT_GEN -->|"json + html"| UPLOAD_ARTIFACT
+    REPORT_GEN -->|zap-dast.json| UPLOAD_SARIF
+    REPORT_GEN -->|json + html| UPLOAD_ARTIFACT
 ```
 
 ---
